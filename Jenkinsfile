@@ -8,61 +8,28 @@ pipeline {
   }
   stages {
     stage('Build') {
-      parallel {
-        stage('Compile') {
-          steps {
-            container('maven') {
-              sh 'mvn compile'
-            }
-          }
-        }
+      steps {
+        sh 'mvn compile'
       }
     }
     stage('Test') {
-      parallel {
-        stage('Unit Tests') {
-          steps {
-            container('maven') {
-              sh 'mvn test'
-            }
-          }
-        }
+      steps {
+        sh 'mvn test'
       }
     }
     stage('Package') {
-      parallel {
-        stage('Create Jarfile') {
-          steps {
-            container('maven') {
-              sh 'mvn package -DskipTests'
-            }
-          }
-        }
+      steps {
+        sh 'mvn package -DskipTests'
       }
     }
-    stage('OSS License Checker') {
+    stage('OSS License Compliance Check') {
       steps {
-        container('maven') {
-          sh '''
-            # Install Ruby using Alpine's package manager
-            apk add --no-cache ruby ruby-bundler ruby-irb ruby-json ruby-rake ruby-rdoc
-
-            # Install License Finder
-            gem install --no-document license_finder
-
-            # Run License Finder
-            license_finder
-          '''
-        }
+        sh 'mvn license:check'
       }
     }
     stage('SCA') {
       steps {
-        container('maven') {
-          catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-            sh 'mvn org.owasp:dependency-check-maven:check'
-          }
-        }
+        sh 'mvn org.owasp:dependency-check-maven:check'
       }
       post {
         always {
