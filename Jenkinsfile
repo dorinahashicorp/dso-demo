@@ -33,10 +33,8 @@ pipeline {
         }
         stage('OSS License Checker') {
           steps {
-            container('licensefinder') {
+            container('ruby') { // Assuming a Ruby container that includes gem and other necessary tools
               sh '''
-                sudo apt-get update
-                sudo apt-get install -y ruby-full
                 gem install license_finder
                 license_finder
               '''
