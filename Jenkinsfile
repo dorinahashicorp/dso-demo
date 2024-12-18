@@ -42,9 +42,13 @@ pipeline {
     }
     stage('OSS License Checker') {
       steps {
-        container('ruby') {
+        container('maven') {
           sh '''
+            # Ensure Ruby is installed
+            apt-get update && apt-get install -y ruby-full
             gem install license_finder
+            
+            # Run License Finder
             license_finder
           '''
         }
