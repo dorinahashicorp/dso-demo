@@ -15,17 +15,33 @@ pipeline {
       }
     }
     stage('Static Analysis') {
-      steps {
-        container('maven') {
-          catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-            sh 'mvn org.owasp:dependency-check-maven:check -Dformat=XML'
+      parallel {
+        stage('Dependency Check') {
+          steps {
+            container('maven') {
+              catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                sh 'mvn org.owasp:dependency-check-maven:check -Dformat=XML'
+              }
+            }
+          }
+          post {
+            always {
+              archiveArtifacts(allowEmptyArchive: true, artifacts: 'target/dependency-check-report.xml', fingerprint: true, onlyIfSuccessful: true)
+              dependencyCheckPublisher(pattern: 'target/dependency-check-report.xml')
+            }
           }
         }
-      }
-      post {
-        always {
-          archiveArtifacts(allowEmptyArchive: true, artifacts: 'target/dependency-check-report.xml', fingerprint: true, onlyIfSuccessful: true)
-          dependencyCheckPublisher(pattern: 'target/dependency-check-report.xml')
+        stage('OSS License Checker') {
+          steps {
+            container('licensefinder') {
+              sh '''
+                #!/bin/bash -l
+                rvm use default
+                gem install license_finder
+                license_finder
+              '''
+            }
+          }
         }
       }
     }
