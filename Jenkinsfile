@@ -44,10 +44,12 @@ pipeline {
       steps {
         container('maven') {
           sh '''
-            # Ensure Ruby is installed
-            apt-get update && apt-get install -y ruby-full
-            gem install license_finder
-            
+            # Install Ruby using Alpine's package manager
+            apk add --no-cache ruby ruby-bundler ruby-irb ruby-json ruby-rake ruby-rdoc
+
+            # Install License Finder
+            gem install --no-document license_finder
+
             # Run License Finder
             license_finder
           '''
