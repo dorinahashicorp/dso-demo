@@ -33,9 +33,8 @@ pipeline {
         }
         stage('OSS License Checker') {
           steps {
-            container('ruby') { // Assuming a Ruby container that includes gem and other necessary tools
+            container('licensefinder') {
               sh '''
-                gem install license_finder
                 license_finder
               '''
             }
