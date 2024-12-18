@@ -23,21 +23,6 @@ spec:
           name: docker-sock
         - mountPath: /tmp/trivycache/
           name: trivycache
-    - name: ruby
-      image: ruby:latest
-      command: ["sleep"]
-      args: ["infinity"]  # Keeps the container running
-    - name: kaniko
-      image: gcr.io/kaniko-project/executor:v1.6.0-debug
-      imagePullPolicy: Always
-      command: ["sleep"]
-      args: ["99d"]
-      env:
-        - name: container
-          value: docker
-      volumeMounts:
-        - name: jenkins-docker-cfg
-          mountPath: /kaniko/.docker
     - name: trufflehog
       image: rmkanda/trufflehog
       command:
