@@ -33,6 +33,11 @@ spec:
       command:
         - cat
       tty: true
+    - name: ruby
+      image: ruby:latest
+      command:
+        - cat
+      tty: true
   volumes:
     - name: m2
       hostPath:
