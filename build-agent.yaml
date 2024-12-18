@@ -31,7 +31,10 @@ spec:
     - name: licensefinder
       image: licensefinder/license_finder
       command:
-        - cat
+        - /bin/sh
+      args:
+        - '-c'
+        - 'while true; do sleep 30; done;'  # Keeps the container running
       tty: true
     - name: kaniko
       image: gcr.io/kaniko-project/executor:v1.6.0-debug
