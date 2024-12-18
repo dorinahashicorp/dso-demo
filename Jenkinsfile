@@ -35,8 +35,8 @@ pipeline {
           steps {
             container('licensefinder') {
               sh '''
-                #!/bin/bash -l
-                rvm use default
+                sudo apt-get update
+                sudo apt-get install -y ruby-full
                 gem install license_finder
                 license_finder
               '''
