@@ -8,36 +8,22 @@ pipeline {
   }
   stages {
     stage('Build') {
-      steps {
-        container('maven') {
-          sh 'mvn compile'
+      parallel {
+        stage('Compile') {
+          steps {
+            container('maven') {
+              sh 'mvn compile'
+            }
+          }
         }
       }
     }
-    stage('Static Analysis') {
+    stage('Test') {
       parallel {
-        stage('Dependency Check') {
+        stage('Unit Tests') {
           steps {
             container('maven') {
-              catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                sh 'mvn org.owasp:dependency-check-maven:check -Dformat=XML'
-              }
-            }
-          }
-          post {
-            always {
-              archiveArtifacts(allowEmptyArchive: true, artifacts: 'target/dependency-check-report.xml', fingerprint: true, onlyIfSuccessful: true)
-              dependencyCheckPublisher(pattern: 'target/dependency-check-report.xml')
-            }
-          }
-        }
-        stage('OSS License Checker') {
-          steps {
-            container('ruby') {
-              sh '''
-                gem install license_finder
-                license_finder
-              '''
+              sh 'mvn test'
             }
           }
         }
@@ -52,18 +38,39 @@ pipeline {
             }
           }
         }
-        stage('OCI Image BnP') {
-          steps {
-            container('kaniko') {
-              sh '/kaniko/executor --context=`pwd` --dockerfile=`pwd`/Dockerfile --destination=docker.io/dorinatimbur/dso-demo --insecure --skip-tls-verify --cache=true'
-            }
+      }
+    }
+    stage('OSS License Checker') {
+      steps {
+        container('licensefinder') {
+          sh 'ls -al'
+          sh '''
+            #!/bin/bash --login
+            rvm use default
+            gem install license_finder
+            license_finder
+          '''
+        }
+      }
+    }
+    stage('SCA') {
+      steps {
+        container('maven') {
+          catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+            sh 'mvn org.owasp:dependency-check-maven:check'
           }
+        }
+      }
+      post {
+        always {
+          archiveArtifacts allowEmptyArchive: true, artifacts: 'target/dependency-check-report.html', fingerprint: true, onlyIfSuccessful: true
+          //dependencyCheckPublisher pattern: 'report.xml'
         }
       }
     }
     stage('Deploy to Dev') {
       steps {
-        sh "echo 'Deployment complete'"
+        sh "echo 'Deployment done'"
       }
     }
   }
